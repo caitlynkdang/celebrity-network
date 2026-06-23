@@ -17,10 +17,10 @@ const RELATION_COLOR = {
 }
 
 const METRIC_INFO = {
-  PageRank:     'Overall star power — measures influence based on who you\'re connected to, not just how many people.',
-  Degree:       'Direct connections — the percentage of people in the network this person is directly linked to.',
-  Betweenness:  'Bridge score — how often this person is the only link between two different groups. High = key connector.',
-  Closeness:    'Reach — how quickly this person can connect to anyone in the network through friends of friends.',
+  'Star Power':  'Technical term: PageRank. Measures overall influence based on who you\'re connected to — being linked to other well-connected people counts more than just having lots of connections.',
+  'Connections': 'Technical term: Degree centrality. The share of people in the network this person is directly linked to.',
+  'Connector':   'Technical term: Betweenness centrality. How often this person is the only bridge between two separate groups. A high score means remove them and the network falls apart.',
+  'Reach':       'Technical term: Closeness centrality. How few hops it takes to get from this person to anyone else — high means they\'re never far from the action.',
 }
 
 function InfoTooltip({ text }) {
@@ -106,10 +106,10 @@ export default function NodePanel({ node, connections, onClose }) {
         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
         background: '#0f172a', borderRadius: 8, padding: '12px 8px', marginBottom: 20,
       }}>
-        <Stat label="PageRank"    value={`${(node.pagerank * 100).toFixed(2)}%`} />
-        <Stat label="Degree"      value={(node.degree_centrality * 100).toFixed(1) + '%'} />
-        <Stat label="Betweenness" value={node.betweenness_centrality.toFixed(3)} />
-        <Stat label="Closeness"   value={node.closeness_centrality.toFixed(3)} />
+        <Stat label="Star Power"  value={`${(node.pagerank * 100).toFixed(2)}%`} />
+        <Stat label="Connections" value={(node.degree_centrality * 100).toFixed(1) + '%'} />
+        <Stat label="Connector"   value={node.betweenness_centrality.toFixed(3)} />
+        <Stat label="Reach"       value={node.closeness_centrality.toFixed(3)} />
       </div>
 
       {/* Connections */}
