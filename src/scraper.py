@@ -224,17 +224,55 @@ def build_network(
     }
 
 
+def merge_networks(existing: dict, new: dict) -> dict:
+    """Merge two network dicts, deduplicating nodes and edges."""
+    node_ids = {n["id"] for n in existing["nodes"]}
+    edge_keys = {(e["source"], e["target"], e["relation"]) for e in existing["edges"]}
+
+    merged_nodes = existing["nodes"] + [n for n in new["nodes"] if n["id"] not in node_ids]
+    merged_edges = existing["edges"] + [
+        e for e in new["edges"]
+        if (e["source"], e["target"], e["relation"]) not in edge_keys
+        and (e["target"], e["source"], e["relation"]) not in edge_keys
+    ]
+    return {"nodes": merged_nodes, "edges": merged_edges}
+
+
 if __name__ == "__main__":
     import sys
 
-    seeds = sys.argv[1:] or ["Taylor Swift", "Beyoncé"]
-    print(f"Building network for: {seeds}")
-    network = build_network(seeds, depth=2, max_nodes=500)
-
     output_path = "data/network.json"
+
+    new_seeds = sys.argv[1:]
+    if not new_seeds:
+        print("Usage: python src/scraper.py \"Celebrity Name\" [\"Another Name\" ...]")
+        print("Example: python src/scraper.py \"Beyoncé\" \"Rihanna\"")
+        sys.exit(1)
+
+    # Load existing network if present, skip seeds already in it
+    existing: dict = {"nodes": [], "edges": []}
+    try:
+        with open(output_path) as f:
+            existing = json.load(f)
+        existing_names = {n["name"].lower() for n in existing["nodes"]}
+        skipped = [s for s in new_seeds if s.lower() in existing_names]
+        new_seeds = [s for s in new_seeds if s.lower() not in existing_names]
+        if skipped:
+            print(f"Already in network, skipping: {skipped}")
+    except FileNotFoundError:
+        pass
+
+    if not new_seeds:
+        print("All seeds already in the network. Nothing to do.")
+        sys.exit(0)
+
+    print(f"Adding to network: {new_seeds}")
+    new_network = build_network(new_seeds, depth=2, max_nodes=500)
+    merged = merge_networks(existing, new_network)
+
     with open(output_path, "w") as f:
-        json.dump(network, f, indent=2)
+        json.dump(merged, f, indent=2)
 
     print(f"\nSaved → {output_path}")
-    print(f"  {len(network['nodes'])} nodes")
-    print(f"  {len(network['edges'])} edges")
+    print(f"  {len(merged['nodes'])} nodes (+{len(merged['nodes']) - len(existing['nodes'])} new)")
+    print(f"  {len(merged['edges'])} edges (+{len(merged['edges']) - len(existing['edges'])} new)")
