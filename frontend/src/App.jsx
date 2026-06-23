@@ -9,7 +9,7 @@ export default function App() {
   const [selectedNode, setSelectedNode] = useState(null)
 
   useEffect(() => {
-    fetch('/network_enriched.json')
+    fetch(`${import.meta.env.BASE_URL}network_enriched.json`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()

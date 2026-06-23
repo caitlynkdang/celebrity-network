@@ -4,4 +4,5 @@ __pycache__/
 venv/
 .venv/
 data/*.json
+!data/network_enriched.json
 .DS_Store
