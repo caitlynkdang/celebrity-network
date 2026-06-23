@@ -141,37 +141,13 @@ export default function NetworkGraph({ data, selectedId, focusNodeId, onNodeClic
     )
   }, [focusNodeId])
 
-  // Highlight selected node + its neighbors
+  // Highlight the selected node
   useEffect(() => {
-    const node  = nodeRef.current
-    const link  = linkRef.current
-    const edges = edgesRef.current
-    if (!node || !link) return
-
-    if (!selectedId) {
-      node.select('circle').attr('opacity', 1).attr('stroke', '#0f172a').attr('stroke-width', 1.5)
-      link.attr('opacity', 0.5)
-      return
-    }
-
-    const neighbors = new Set()
-    ;(edges ?? []).forEach(e => {
-      const src = typeof e.source === 'object' ? e.source.id : e.source
-      const tgt = typeof e.target === 'object' ? e.target.id : e.target
-      if (src === selectedId) neighbors.add(tgt)
-      if (tgt === selectedId) neighbors.add(src)
-    })
-
+    const node = nodeRef.current
+    if (!node) return
     node.select('circle')
-      .attr('opacity',      d => d.id === selectedId || neighbors.has(d.id) ? 1 : 0.1)
       .attr('stroke',       d => d.id === selectedId ? '#fff' : '#0f172a')
       .attr('stroke-width', d => d.id === selectedId ? 3 : 1.5)
-
-    link.attr('opacity', d => {
-      const src = typeof d.source === 'object' ? d.source.id : d.source
-      const tgt = typeof d.target === 'object' ? d.target.id : d.target
-      return src === selectedId || tgt === selectedId ? 0.9 : 0.04
-    })
   }, [selectedId])
 
   return <svg ref={svgRef} style={{ width: '100%', height: '100%' }} />
