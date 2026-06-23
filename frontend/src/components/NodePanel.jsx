@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const RELATION_LABEL = {
   costar:       'Co-star',
@@ -17,35 +17,43 @@ const RELATION_COLOR = {
 }
 
 const METRIC_INFO = {
-  'Star Power':  'Technical term: PageRank. Measures overall influence based on who you\'re connected to — being linked to other well-connected people counts more than just having lots of connections.',
-  'Connections': 'Technical term: Degree centrality. The share of people in the network this person is directly linked to.',
-  'Connector':   'Technical term: Betweenness centrality. How often this person is the only bridge between two separate groups. A high score means remove them and the network falls apart.',
-  'Reach':       'Technical term: Closeness centrality. How few hops it takes to get from this person to anyone else — high means they\'re never far from the action.',
+  'Star Power':  'PageRank — influence weighted by who you know, not just how many.',
+  'Connections': 'Degree centrality — share of the network directly linked to this person.',
+  'Connector':   'Betweenness centrality — how often this person bridges separate groups.',
+  'Reach':       'Closeness centrality — how few hops to get from here to anyone else.',
 }
 
 function InfoTooltip({ text }) {
-  const [visible, setVisible] = useState(false)
+  const [pos, setPos] = useState(null)
+  const ref = useRef(null)
+
+  function handleMouseEnter() {
+    const r = ref.current.getBoundingClientRect()
+    setPos({ x: r.left + r.width / 2, y: r.top })
+  }
+
   return (
-    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+    <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center' }}>
       <span
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setPos(null)}
         style={{
-          display:      'inline-flex', alignItems: 'center', justifyContent: 'center',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 14, height: 14, borderRadius: '50%',
           background: '#334155', color: '#94a3b8',
           fontSize: 9, fontWeight: 700, cursor: 'default',
           marginLeft: 4, flexShrink: 0, userSelect: 'none',
         }}
       >i</span>
-      {visible && (
+      {pos && (
         <span style={{
-          position:   'absolute', bottom: '120%', left: '50%',
-          transform:  'translateX(-50%)',
+          position: 'fixed',
+          left: pos.x, top: pos.y - 8,
+          transform: 'translate(-50%, -100%)',
           background: '#0f172a', border: '1px solid #334155',
-          borderRadius: 6, padding: '7px 10px',
+          borderRadius: 6, padding: '6px 10px',
           fontSize: 11, color: '#cbd5e1', lineHeight: 1.5,
-          width: 200, zIndex: 300, pointerEvents: 'none',
+          width: 190, zIndex: 1000, pointerEvents: 'none',
           whiteSpace: 'normal', textAlign: 'left',
         }}>
           {text}
