@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import NetworkGraph from './components/NetworkGraph.jsx'
 import NodePanel from './components/NodePanel.jsx'
 import Legend from './components/Legend.jsx'
+import SearchBar from './components/SearchBar.jsx'
 
 export default function App() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
+  const [focusNodeId, setFocusNodeId] = useState(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}network_enriched.json`)
@@ -42,6 +44,11 @@ export default function App() {
 
   const handleNodeClick = useCallback((node) => setSelectedNode(node), [])
 
+  const handleSearch = useCallback((node) => {
+    setSelectedNode(node)
+    setFocusNodeId(node?.id ?? null)
+  }, [])
+
   if (error) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 12 }}>
       <div style={{ color: '#ef4444', fontSize: 16 }}>Failed to load network data</div>
@@ -70,6 +77,7 @@ export default function App() {
         flexShrink:  0,
       }}>
         <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>Celebrity Network</span>
+        <SearchBar nodes={data?.nodes ?? []} onSelect={handleSearch} />
         <span style={{ fontSize: 12, color: '#475569' }}>scroll to zoom · drag to pan · click node to explore</span>
       </div>
 
@@ -78,6 +86,7 @@ export default function App() {
         <NetworkGraph
           data={data}
           selectedId={selectedNode?.id ?? null}
+          focusNodeId={focusNodeId}
           onNodeClick={handleNodeClick}
         />
         <NodePanel

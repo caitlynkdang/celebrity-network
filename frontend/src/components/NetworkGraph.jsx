@@ -9,11 +9,13 @@ const RELATION_COLORS = {
   child:        '#d97706',
 }
 
-export default function NetworkGraph({ data, selectedId, onNodeClick }) {
-  const svgRef  = useRef(null)
-  const nodeRef = useRef(null)
-  const linkRef = useRef(null)
+export default function NetworkGraph({ data, selectedId, focusNodeId, onNodeClick }) {
+  const svgRef   = useRef(null)
+  const nodeRef  = useRef(null)
+  const linkRef  = useRef(null)
   const edgesRef = useRef(null)
+  const zoomRef  = useRef(null)
+  const nodesRef = useRef(null)
 
   // Build simulation once per data load
   useEffect(() => {
@@ -25,14 +27,15 @@ export default function NetworkGraph({ data, selectedId, onNodeClick }) {
     const nodes = data.nodes.map(d => ({ ...d }))
     const edges = data.edges.map(d => ({ ...d }))
     edgesRef.current = edges
+    nodesRef.current = nodes
 
     const svg = d3.select(el)
     svg.selectAll('*').remove()
 
     const g = svg.append('g')
-    svg.call(
-      d3.zoom().scaleExtent([0.05, 10]).on('zoom', e => g.attr('transform', e.transform))
-    )
+    const zoom = d3.zoom().scaleExtent([0.05, 10]).on('zoom', e => g.attr('transform', e.transform))
+    svg.call(zoom)
+    zoomRef.current = zoom
 
     const maxPR = d3.max(nodes, d => d.pagerank) || 1
     const radius = d3.scaleSqrt().domain([0, maxPR]).range([4, 22])
@@ -122,6 +125,21 @@ export default function NetworkGraph({ data, selectedId, onNodeClick }) {
 
     return () => { sim.stop(); tip.remove() }
   }, [data])
+
+  // Zoom to focused node
+  useEffect(() => {
+    if (!focusNodeId || !zoomRef.current || !nodesRef.current || !svgRef.current) return
+    const target = nodesRef.current.find(n => n.id === focusNodeId)
+    if (!target || target.x == null) return
+    const el = svgRef.current
+    d3.select(el).transition().duration(600).call(
+      zoomRef.current.transform,
+      d3.zoomIdentity
+        .translate(el.clientWidth / 2, el.clientHeight / 2)
+        .scale(3)
+        .translate(-target.x, -target.y)
+    )
+  }, [focusNodeId])
 
   // Highlight selected node + its neighbors
   useEffect(() => {
